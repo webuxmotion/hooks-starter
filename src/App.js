@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useMemo } from 'react'
+import useAbortableFetch from 'use-abortable-fetch'
+import { useSpring, animated } from 'react-spring'
 import Toggle from './Toggle'
 import Counter from './Counter'
 import { useTitleInput } from './hooks/useTitleInput'
@@ -8,6 +10,9 @@ export const UserContext = createContext()
 const App = () => {
   const [name, setName] = useTitleInput('')
   const [dishes, setDishes] = useState([])
+  const { data, loading } = useAbortableFetch('https://my-json-server.typicode.com/leveluptuts/fakeapi/dishes')
+
+  const props = useSpring({opacity: 1, from: { opacity: 0 }})
 
   const reverseWord = word => {
     return word
@@ -17,19 +22,6 @@ const App = () => {
   }
   const title = 'Level Up Dishes'
 
-  const TitleReversed = useMemo(() => reverseWord(title), [title])
-
-  const fetchDishes = async () => {
-    console.log('run')
-    const res = await fetch('https://my-json-server.typicode.com/leveluptuts/fakeapi/dishes')
-    const data = await res.json()
-    setDishes(data)
-  }
-
-  useEffect(() => {
-    fetchDishes()
-  }, [name])
-
   return (
     <UserContext.Provider
       value={{
@@ -37,9 +29,10 @@ const App = () => {
       }}
     >
       <div className="main-wrapper">
-        <h1>{TitleReversed}</h1>
+        <animated.h1 style={props}>React Hooks</animated.h1>
         <Toggle/>
         <Counter/>
+        
         <form onSubmit={(e) => {
           e.preventDefault() 
         }}>
@@ -51,7 +44,7 @@ const App = () => {
           <button>Submit</button>
         </form>
 
-        {dishes.map(dish => (
+        {data && data.map(dish => (
           <article className="dish-card dish-card--withImage">
             <h3>{dish.name}</h3>
             <p>{dish.desc}</p>
